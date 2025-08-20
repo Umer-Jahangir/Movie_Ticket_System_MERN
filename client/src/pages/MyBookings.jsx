@@ -1,25 +1,38 @@
 import React from 'react'
-import {dummyBookingData} from '../assets/assets.js'
 import Loading from '../components/Loading.jsx';
 import { useState, useEffect } from 'react';
 import { Ticket } from 'lucide-react';
 import BlurCircle from '../components/BlurCircle.jsx';
 import timeFormat from '../lib/timeFormat.js';
 import { dateFormat } from '../lib/dateFormat.js';
+import { useAppContext } from '../context/AppContext.jsx';
 const MyBookings = () => {
+
+  const {axios, getToken, user, image_base_url} = useAppContext()
   const currency = import.meta.env.VITE_CURRENCY;
 
   const [bookings, setBookings] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   const getMyBookings = async ()=>{
-    setBookings(dummyBookingData)
+    try {
+      const {data} = await axios.get('/api/user/bookings', {
+          headers: {Authorization: `Bearer ${await getToken()}`}
+        })
+        if(data.success){
+          setBookings(data.bookings)
+        }
+    } catch (error) {
+      console.log(error)
+    }
     setIsLoading(false)
   }
 
   useEffect(()=>{
-  getMyBookings(dummyBookingData)
-  },[])
+    if(user){
+      getMyBookings()
+    }
+  },[user])
 
   const [timeoutReached, setTimeoutReached] = useState(false);
 
@@ -34,6 +47,10 @@ const MyBookings = () => {
 if (!isLoading && bookings.length === 0) {
   return timeoutReached ? (
     <div className="flex items-center justify-center min-h-screen text-gray-600 text-lg gap-2">
+      <BlurCircle top='100px' left='100px' />
+            <div>
+      <BlurCircle bottom='0px' left='900px' />
+      </div>
       <Ticket size={24} />
       <span>No Tickets Booked</span>
     </div>
@@ -53,7 +70,7 @@ if (!isLoading && bookings.length === 0) {
       {bookings.map((item, index) => (
         <div key ={index} className='flex flex-col md:flex-row justify-between bg-[#FF3B2E]/8 border border-[#FF3B2E]/20 p-2 rounded-lg mt-4 max-w-3xl'>
            <div className='flex flex-col md:flex-row'>
-            <img src = {item.show.movie.poster_path} alt = "" className='md:max-w-45 aspect-video h-auto object-cover object-bottom rounded'/>
+            <img src = {image_base_url + item.show.movie.poster_path} alt = "" className='md:max-w-45 aspect-video h-auto object-cover object-bottom rounded'/>
             <div className='flex flex-col p-4'>
                <p className='text-lg font-semibold'>{item.show.movie.title}</p>
                <p className='text-gray-400 text-sm'>{timeFormat(item.show.movie.runtime)}</p>

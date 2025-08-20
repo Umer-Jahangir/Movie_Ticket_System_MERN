@@ -2,24 +2,37 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StarIcon, Heart } from 'lucide-react';
 import timeFormat from '../lib/timeFormat';
-import { useFavorites } from '../context/FavoritesContext';
+import { useAppContext } from '../context/AppContext';
+import toast from 'react-hot-toast';
 
 const MovieCard = ({ movie }) => {
   const navigate = useNavigate();
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { axios, getToken, user, fetchFavoriteMovies, favoriteMovies, image_base_url } = useAppContext();
 
-  const handleFavoriteClick = (e) => {
-    e.stopPropagation();
-    if (isFavorite(movie._id)) {
-      removeFavorite(movie._id);
-    } else {
-      addFavorite(movie);
+  const handleFavoriteClick = async (e) => {
+    e.stopPropagation(); // prevent navigation when clicking heart
+    try {
+      if (!user) return toast.error('Please login to proceed');
+
+      const { data } = await axios.post(
+        '/api/user/update-favorite',
+        { movieId: movie._id },
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
+
+      if (data.success) {
+        await fetchFavoriteMovies();
+        toast.success(data.message);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
+  const isFavorite = favoriteMovies.some((fav) => fav._id === movie._id);
+
   return (
-    <div className="flex flex-col justify-between p-3 bg-gray-800 rounded-2xl hover:-translate-y-1 transition duration-300 w-66 relative">
-      
+    <div className="flex flex-col justify-between p-3 bg-gray-800 rounded-2xl hover:-translate-y-1 transition duration-300 w-72 relative">
       {/* Favorite Icon Button */}
       <button
         onClick={handleFavoriteClick}
@@ -28,10 +41,7 @@ const MovieCard = ({ movie }) => {
                   transition-all duration-200 ease-in-out cursor-pointer"
       >
         <Heart
-          className={`w-5 h-5 ${isFavorite(movie._id) 
-              ? 'fill-red-500 text-red-500'
-              : 'text-white'
-          }`}
+          className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-white'}`}
         />
       </button>
 
@@ -41,7 +51,7 @@ const MovieCard = ({ movie }) => {
           navigate(`/movies/${movie._id}`);
           scrollTo(0, 0);
         }}
-        src={movie.backdrop_path}
+        src={image_base_url + movie.backdrop_path}
         alt="Movie Poster"
         className="rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer"
       />
@@ -51,7 +61,7 @@ const MovieCard = ({ movie }) => {
 
       {/* Release year, genres, runtime */}
       <p className="text-sm text-gray-400 mt-2">
-        {new Date(movie.release_date).getFullYear()} • {' '}
+        {new Date(movie.release_date).getFullYear()} •{' '}
         {movie.genres.slice(0, 2).map((genre) => genre.name).join(' | ')} •{' '}
         {timeFormat(movie.runtime)}
       </p>

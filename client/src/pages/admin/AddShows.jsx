@@ -1,21 +1,36 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { dummyShowsData } from '../../assets/assets';
 import Loading from '../../components/Loading';
 import Title from '../../components/admin/Title';
 import { StarIcon, ChevronRight, ChevronLeft, CheckIcon, DeleteIcon } from 'lucide-react';
 import { kConverter } from '../../lib/kConverter';
+import { useAppContext } from '../../context/AppContext';
+import toast from 'react-hot-toast';
 const AddShows = () => {
+
+  const {axios, getToken, user, image_base_url} = useAppContext();
+
   const currency = import.meta.env.VITE_CURRENCY;
   const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
-  const [dateTimeSelection, setDateTimeSelection] = useState("");
+  const [dateTimeSelection, setDateTimeSelection] = useState({});
   const [dateTimeInput, setDateTimeInput] = useState("");
   const [showPrice, setShowPrice] = useState("");
+  const [addingShow, setAddingShow] = useState(false);
 
   const scrollRef = useRef(null);
 
   const fetchNowPlayingMovies = async () => {
-    setNowPlayingMovies(dummyShowsData);
+    try {
+      const{data} = await axios.get('/api/show/now-playing',{
+        headers:{Authorization: `Bearer ${await getToken()}`}
+      })
+      if(data.success){
+        setNowPlayingMovies(data.movies)
+      }
+    } catch (error) {
+      console.error('Error fetching movies', error)
+      
+    }
   };
 
   const handleDateTimeAdd = () => {
@@ -46,9 +61,48 @@ const handleRemoveTime = (date, time) => {
   });
 };
 
+const handleSubmit = async ()=>{
+  try {
+    setAddingShow(true)
+    if(!selectedMovie || Object.keys(dateTimeSelection).length === 0 || !showPrice){
+      return toast('Missing required fields')
+    }
+
+    const showsInput = Object.entries(dateTimeSelection).map(([date, time])=>({date, time}));
+
+    const payload = {
+      movieId:selectedMovie,
+      showsInput,
+      showPrice:Number(showPrice)
+    }
+
+    const{data} = await axios.post('/api/show/add', payload,{
+      headers:{
+        Authorization: `Bearer ${await getToken()}`
+      }
+    })
+
+    if(data.success){
+      toast.success(data.message)
+      setSelectedMovie(null)
+      setDateTimeSelection({})
+      setShowPrice("")
+    }else{
+      toast.error(data.message)
+    }
+  } catch (error) {
+    console.error("Submission error:", error);
+    toast.error('An error occurred. Please try again.')
+    setAddingShow(false)
+  }
+}
+
   useEffect(() => {
-    fetchNowPlayingMovies();
-  }, []);
+    if(user){
+          fetchNowPlayingMovies();
+    }
+
+  }, [user]);
 
   const scrollRight = () => {
     if (scrollRef.current) {
@@ -77,26 +131,28 @@ const handleRemoveTime = (date, time) => {
             <div
               key={movie.id}
               className="flex-shrink-0 w-40 cursor-pointer group-hover:not-hover:opacity-40 transition duration-300"
-              onClick={() => { setSelectedMovie(movie._id) }}
+              onClick={() => {
+              setSelectedMovie((prev) => (prev === movie.id ? null : movie.id));
+              }}
             >
               {/* Poster */}
               <div className="relative hover:-translate-y-1 transition duration-300">
                 <img
-                  src={movie.poster_path}
+                  src={image_base_url + movie.poster_path}
                   alt=""
                   className="w-full object-cover brightness-90 rounded-lg"
                 />
                 <div className="text-sm flex items-center justify-between p-2 bg-black/70 w-full absolute bottom-0 left-0 rounded-b-lg">
                   <p className="flex items-center gap-1 text-gray-400">
-                    <StarIcon className="w-4 h-4 text-primary fill-primary" />
+                    <StarIcon className="w-4 h-4 text-[#FF3B2E]  fill-[#FF3B2E] " />
                     {movie.vote_average.toFixed(1)}
                   </p>
                   <p className="text-gray-300">{kConverter(movie.vote_count)} Votes</p>
                 </div>
 
                 {/* Selected check icon */}
-                {selectedMovie === movie._id && (
-                  <div className="absolute top-2 right-2 flex items-center justify-center bg-primary h-6 w-6 rounded">
+                {selectedMovie === movie.id && (
+                  <div className="absolute top-2 right-2 flex items-center justify-center bg-[#FF3B2E]  h-6 w-6 rounded">
                     <CheckIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
                   </div>
                 )}
@@ -145,8 +201,8 @@ const handleRemoveTime = (date, time) => {
         <div className="inline-flex gap-5 border border-gray-600 p-1 pl-3 rounded-lg"> 
           <input type="datetime-local" value={dateTimeInput} onChange={(e) =>
           setDateTimeInput(e.target.value)} className="outline-none rounded-md" />
-          <button onClick={handleDateTimeAdd} className="bg-primary/80
-          text-white px-3 py-2 text-sm rounded-lg hover:bg-primary
+          <button onClick={handleDateTimeAdd} className="bg-[#FF3B2E] /80
+          text-white px-3 py-2 text-sm rounded-lg hover:bg-[#FF3B2E] 
           cursor-pointer" >
           Add Time
           </button>
@@ -163,7 +219,7 @@ const handleRemoveTime = (date, time) => {
             <div className="font-medium">{date}</div>
               <div className="flex flex-wrap gap-2 mt-1 text-sm">
               {times.map((time) => (
-                <div key={time} className="border border-primary px-2 py-1 flex items-center rounded" >
+                <div key={time} className="border border-[#FF3B2E]  px-2 py-1 flex items-center rounded" >
                 <span>{time}</span>
                 <DeleteIcon onClick={() => handleRemoveTime (date, time)} width={15} className="ml-2 text-red-500 hover: text-red-700 cursor-pointer" />
                 </div>
@@ -174,7 +230,7 @@ const handleRemoveTime = (date, time) => {
         </ul>
       </div>
       )}
-      <button className='bg-primary text-white px-8 py-2 mt-6 rounded hover:bg-primary/90 transition-all cursor-pointer'>
+      <button onClick={handleSubmit} disabled = {addingShow} className='bg-[#FF3B2E]  text-white px-8 py-2 mt-6 rounded hover:bg-[#FF3B2E] /90 transition-all cursor-pointer'>
       Add Show
       </button>
     </>
