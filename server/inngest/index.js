@@ -123,12 +123,134 @@ const sendBookingConfirmationEmail = inngest.createFunction(
   }
 )
 
+const sendShowReminders = inngest.createFunction(
+  { id: "send-show-reminder" },
+  { cron: "0 */8 * * *" }, // Runs every 8 hours
+  async ({ step }) => {
+    const now = new Date();
+    const in8Hours = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
+    const windowStart = now;
+
+    // Prepare reminder tasks
+    const reminderTasks = await step.run("prepare-reminder-tasks", async () => {
+      const shows = await Show.find({
+        showTime: { $gte: windowStart, $lte: in8Hours },
+      }).populate("movie");
+
+      const tasks = [];
+
+      for (const show of shows) {
+        if (!show.movie || !show.occupiedSeats) continue;
+
+        // Get unique user IDs
+        const userIds = [...new Set(Object.values(show.occupiedSeats))];
+        if (userIds.length === 0) continue;
+
+        const users = await User.find({ _id: { $in: userIds } }).select("name email");
+
+        for (const user of users) {
+          tasks.push({
+            userEmail: user.email,
+            userName: user.name,
+            movieTitle: show.movie.title,
+            showTime: show.showTime,
+          });
+        }
+      }
+      return tasks;
+    });
+
+    if (reminderTasks.length === 0) {
+      return { sent: 0, message: "No reminders to send." };
+    }
+
+    // Send reminder emails
+    const result = await step.run("send-all-reminders", async () => {
+      return await Promise.allSettled(
+        reminderTasks.map((task) =>
+          sendEmail({
+            to: task.userEmail,
+            subject: `Reminder: Your movie "${task.movieTitle}" starts soon!`,
+            body: `
+              Hi ${task.userName},<br/><br/>
+              This is a friendly reminder that your movie <b>${task.movieTitle}</b> is scheduled to start soon.<br/><br/>
+              🎬 <b>Movie:</b> ${task.movieTitle} <br/>
+              ⏰ <b>Show Time:</b> ${new Date(task.showTime).toLocaleString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })} <br/><br/>
+              Movie is about to start after 8 hour make sure you are ready!
+              Please arrive at the cinema at least <b>15 minutes</b> before the showtime.<br/><br/>
+              Enjoy your movie! 🍿
+            `,
+          })
+        )
+      );
+    });
+
+    // Calculate success & failure counts
+    const sent = result.filter((r) => r.status === "fulfilled").length;
+    const failed = result.filter((r) => r.status === "rejected").length;
+
+    return {
+      sent,
+      failed,
+      message: `Sent ${sent} reminder(s), ${failed} failed.`,
+    };
+  }
+);
+
+
+// Inngest Function to send notifications when a new show is added
+const sendNewShowNotifications = inngest.createFunction(
+  { id: "send-new-show-notifications" },
+  { event: "app/show.added" },
+  async ({ event }) => {
+    const { movieTitle } = event.data;
+
+    // Fetch all users
+    const users = await User.find({})
+      
+
+    // Loop through users and send emails
+    for (const user of users) {
+      const userEmail = user.email;
+      const userName = user.name || "Movie Fan";
+
+      const subject = `🎬 New Show Added: ${movieTitle}`;
+      const body = `
+        Hi ${userName},
+
+        Great news! A new show has just been added:
+
+        🎥 Movie: ${movieTitle}
+
+        Book your tickets now before they sell out!
+
+        🍿 CinemaSnap Team
+      `;
+       await sendEmail({
+        to:userEmail,
+        subject,
+        body,
+       })
+    }
+
+    return { message :'Notifications sent'};
+  }
+);
+
 // Create an array where we'll export future Inngest functions
 export const functions = [
     syncUserCreation, 
     syncUserDeletion,
     syncUserUpdation,
     releaseSeatsAndDeleteBooking,
-    sendBookingConfirmationEmail
-                    
+    sendBookingConfirmationEmail,
+    sendShowReminders,
+    sendNewShowNotifications,
 ];
