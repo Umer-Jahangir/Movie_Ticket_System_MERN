@@ -223,15 +223,64 @@ const sendNewShowNotifications = inngest.createFunction(
 
       const subject = `🎬 New Show Added: ${movieTitle}`;
       const body = `
-        Hi ${userName},
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CinemaSnap - New Show Added</title>
+      </head>
+      <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+          <tr>
+            <td align="center" style="padding: 20px 0;">
+              <table cellpadding="0" cellspacing="0" width="600" style="background-color:#ffffff;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.1);overflow:hidden;">
+                <!-- Header -->
+                <tr>
+                  <td style="background-color:#FF3B2E;padding:20px;text-align:center;color:#fff;font-size:24px;font-weight:bold;">
+                    🎬 CinemaSnap
+                  </td>
+                </tr>
 
-        Great news! A new show has just been added:
+                <!-- Content -->
+                <tr>
+                  <td style="padding:30px 25px;color:#333333;font-size:16px;line-height:1.6;">
+                    <p style="margin:0 0 15px 0;">Hi <strong>${userName}</strong>,</p>
+                    <p style="margin:0 0 15px 0;">Great news! A brand-new movie has just been added to our collection:</p>
+                    
+                    <div style="background-color:#f9f9f9;border:1px solid #e5e5e5;padding:15px;border-radius:8px;margin:20px 0;">
+                      <p style="margin:0;font-size:18px;font-weight:bold;color:#FF3B2E;">🎥 ${movieTitle}</p>
+                    </div>
+                    
+                    <p style="margin:0 0 20px 0;">Book your tickets now before they sell out!</p>
+                    <p style="margin:0;">🍿 <strong>The CinemaSnap Team</strong></p>
+                  </td>
+                </tr>
 
-        🎥 Movie: ${movieTitle}
+                <!-- Call to Action Button -->
+                <tr>
+                  <td align="center" style="padding:20px;">
+                    <a href="https://cinemasnap.com" 
+                      style="background-color:#FF3B2E;color:#ffffff;text-decoration:none;
+                              padding:12px 30px;border-radius:6px;font-size:16px;font-weight:bold;
+                              display:inline-block;">
+                      🎟️ Book Tickets Now
+                    </a>
+                  </td>
+                </tr>
 
-        Book your tickets now before they sell out!
-
-        🍿 CinemaSnap Team
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color:#f4f4f4;padding:15px;text-align:center;font-size:12px;color:#888;">
+                    © ${new Date().getFullYear()} CinemaSnap. All rights reserved.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
       `;
        await sendEmail({
         to:userEmail,

@@ -7,7 +7,7 @@ const home = () => {
     <>
     <HeroSection/>
     <FeaturedSection/>
-    <TrailerSection/>
+    {/*<TrailerSection/>*/}
     </>
   )
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { dummyShowsData } from '../assets/assets';
+//import { dummyShowsData } from '../assets/assets';
 import { StarIcon, PlayCircleIcon, Heart, Ticket } from 'lucide-react';
 import BlurCircle from '../components/BlurCircle';
 import timeFormat from '../lib/timeFormat';
@@ -33,7 +33,7 @@ const MovieDetails = () => {
     }
   }, [show, location.key, location.hash]);
 
-  const currentMovie = dummyShowsData.find(show => show.id === Number(id));
+  //const currentMovie = dummyShowsData.find(show => show.id === Number(id));
 
   const {shows, axios, getToken, user, fetchFavoriteMovies, favoriteMovies, image_base_url} = useAppContext()
 
@@ -114,6 +114,8 @@ const MovieDetails = () => {
             {show.movie.genres.map(genre => genre.name).join(' | ')} •{' '}
             {new Date(show.movie.release_date).getFullYear()}
           </p>
+
+            
             <div className="flex items-center gap-4">
               <a
                 href="#dateSelect"
@@ -122,6 +124,8 @@ const MovieDetails = () => {
                 <Ticket className="w-4 h-4" />
                 Book Tickets
               </a>
+
+              {/*
               <button
                 onClick={() =>
                   navigate('/Trailer', {
@@ -136,7 +140,11 @@ const MovieDetails = () => {
                 <PlayCircleIcon className="w-4 h-4" />
                 Watch Trailer
               </button>
+              */}
+
             </div>
+            
+
             <button
               onClick={handleFavoriteClick}
               className="absolute top-3 right-3 p-2 rounded-full bg-black/50 

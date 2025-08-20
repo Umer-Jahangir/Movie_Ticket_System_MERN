@@ -81,6 +81,8 @@ const HeroSection = () => {
           <Ticket className="w-4 h-4" />
           Book Tickets
         </button>
+
+        {/*
         <button
           onClick={() =>
             navigate('/Trailer', {
@@ -95,6 +97,9 @@ const HeroSection = () => {
           <PlayCircleIcon className="w-4 h-4" />
           Watch Trailer
         </button>
+
+        */}
+        
       </div>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
