@@ -99,7 +99,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
             <ul style="font-size: 15px; color: #555; line-height: 1.6;">
               <li><strong>Movie:</strong> ${booking.show.movie.title}</li>
               <li><strong>Show Time:</strong> ${new Date(booking.show.showDateTime).toLocaleString('en-US', {
-                timeZone: 'Asia/Islamabad',
+                timeZone: 'Asia/Karachi',
                 dateStyle: 'full',
                 timeStyle: 'short'
               })}
