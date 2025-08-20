@@ -2,6 +2,7 @@ import { json } from "express";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js"
 import stripe from 'stripe'
+import { inngest } from "../inngest/index.js";
 
 //  Function to check availability of selected seats for a movie
 const checkSeatsAvailability = async (showId, selectedSeats)=>{
