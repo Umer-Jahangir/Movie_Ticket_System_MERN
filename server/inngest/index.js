@@ -88,7 +88,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
     body: `
       <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
         <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-          <h2 style="color: #4CAF50; text-align: center;">🎉 Payment Successful!</h2>
+          <h2 style="color: #FF3B2E; text-align: center;">🎉 Payment Successful!</h2>
           <p style="font-size: 16px; color: #333; text-align: center;">
             Hi <strong>${booking.user.name}</strong>,  
             your payment has been successfully processed, and your booking is confirmed!
@@ -98,14 +98,15 @@ const sendBookingConfirmationEmail = inngest.createFunction(
             <h3 style="color: #333;">🎬 Booking Details:</h3>
             <ul style="font-size: 15px; color: #555; line-height: 1.6;">
               <li><strong>Movie:</strong> ${booking.show.movie.title}</li>
-              <li><strong>Show Time:</strong> ${new Date(booking.show.startTime).toLocaleString()}</li>
+              <li><strong>Show Time:</strong> ${new Date(booking.show.showDateTime).toLocaleString('en-US', {
+                timeZone: 'Asia/Islamabad',
+                dateStyle: 'full',
+                timeStyle: 'short'
+              })}
+            </li>
               <li><strong>Seats:</strong> ${booking.bookedSeats.join(", ")}</li>
-              <li><strong>Total Paid:</strong> Rs. ${booking.amount}</li>
+              <li><strong>Total Paid:</strong> USD. ${booking.amount}</li>
             </ul>
-          </div>
-
-          <div style="text-align: center; margin-top: 25px;">
-            <a href="https://yourdomain.com/my-bookings" style="background-color: #4CAF50; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">View My Bookings</a>
           </div>
 
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;"/>
